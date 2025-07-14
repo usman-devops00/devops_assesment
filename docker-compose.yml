@@ -18,8 +18,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8443:8443"  # Backend service port
-      - "8080:8080"  # Traefik dashboard
+      - "8443:8443"  
+      - "8080:8080"  
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik:/etc/traefik:ro
@@ -100,12 +100,10 @@ services:
     container_name: backend
     restart: unless-stopped
     environment:
-      # Database configuration - NO HARDCODED CREDENTIALS! ✅
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: devops_assesment
       
-      # Vault configuration - PRIMARY SOURCE ✅
       VAULT_URL: http://vault:8200
       VAULT_TOKEN: myroot
       
@@ -124,12 +122,10 @@ services:
         condition: service_completed_successfully
     labels:
       - "traefik.enable=true"
-      # Route ALL traffic on port 8443 to backend (no Host restriction)
       - "traefik.http.routers.backend.rule=PathPrefix(`/`)"
       - "traefik.http.routers.backend.entrypoints=backend"
       - "traefik.http.routers.backend.service=backend-service"
       - "traefik.http.services.backend-service.loadbalancer.server.port=3000"
-      # Optional: Also route from port 80 with Host header
       - "traefik.http.routers.backend-web.rule=Host(`api.localhost`)"
       - "traefik.http.routers.backend-web.entrypoints=web"
       - "traefik.http.routers.backend-web.service=backend-service"
