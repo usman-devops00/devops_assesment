@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Infra Status Dashboard</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .status { margin-bottom: 10px; }
+    .ok { color: green; }
+    .fail { color: red; }
+  </style>
+</head>
+<body>
+  <h1>DevOps Infrastructure Status</h1>
+  <div id="statuses"></div>
+
+  <script>
+    const services = {
+      'Backend API': 'http://localhost:8443/api/health',
+      'Vault': 'http://localhost:8200/v1/sys/health',
+      'Traefik': 'http://localhost:8080/api/overview',
+      'PostgreSQL': 'http://localhost:5432' // Cannot health-check directly via HTTP
+    };
+
+    async function checkService(name, url) {
+      try {
+        const res = await fetch(url);
+        const ok = res.ok;
+        return `<div class="status">${name}: <span class="${ok ? 'ok' : 'fail'}">${ok ? 'OK' : 'Failed'}</span></div>`;
+      } catch (e) {
+        return `<div class="status">${name}: <span class="fail">Failed</span></div>`;
+      }
+    }
+
+    async function updateStatus() {
+      const container = document.getElementById('statuses');
+      container.innerHTML = 'Checking...';
+      const checks = await Promise.all(
+        Object.entries(services).map(([name, url]) => checkService(name, url))
+      );
+      container.innerHTML = checks.join('');
+    }
+
+    updateStatus();
+    setInterval(updateStatus, 10000); // refresh every 10s
+  </script>
+</body>
+</html>
